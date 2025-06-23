@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Введите ключ</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: sans-serif;
+    }
+
+    body {
+      background-image: url('nika_xxx.png'); /* Твоя картинка PNG */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: black; /* если картинка не загрузится */
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: black;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 1000;
+      transition: opacity 1s ease;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    input[type="password"] {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 15px;
+      outline: none;
+    }
+
+    .message {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="message">Введите ключ</div>
+  <input type="password" id="password" placeholder="Ключ..." autofocus>
+</div>
+
+<script>
+  const overlay = document.getElementById('overlay');
+  const passwordInput = document.getElementById('password');
+
+  passwordInput.addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+      if (passwordInput.value === '12345') {
+        overlay.classList.add('hidden');
+      } else {
+        passwordInput.value = '';
+        passwordInput.placeholder = 'Неверный ключ!';
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
