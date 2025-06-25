@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Защищенный доступ</title>
   <style>
     * {
@@ -13,16 +14,20 @@
     html, body {
       height: 100%;
       width: 100%;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
     }
 
     body {
+      background-color: #000;
+      transition: background-image 1.5s ease-in-out;
+    }
+
+    body.authenticated {
       background-image: url('nika_xxx.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      background-color: black;
-      overflow: hidden;
     }
 
     .overlay {
@@ -31,43 +36,62 @@
       left: 0;
       height: 100%;
       width: 100%;
-      background-color: rgba(0, 0, 0, 0.9);
-      color: white;
+      background-color: #000;
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       z-index: 2000;
-      transition: opacity 1s ease;
+      transition: opacity 1s ease, visibility 1s ease;
     }
 
     .overlay.hidden {
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
     }
 
+    .message {
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { text-shadow: 0 0 15px rgba(255, 0, 0, 0.7); }
+      50% { text-shadow: 0 0 25px rgba(255, 0, 0, 1), 0 0 35px rgba(255, 50, 50, 0.8); }
+      100% { text-shadow: 0 0 15px rgba(255, 0, 0, 0.7); }
+    }
+
+    .password-container {
+      position: relative;
+    }
+
     input[type="password"] {
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 15px 30px;
+      font-size: 1.4rem;
       border: none;
-      border-radius: 5px;
-      margin-top: 15px;
+      border-radius: 8px;
       outline: none;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border: 1px solid #555;
+      background: rgba(20, 20, 20, 0.9);
+      color: #fff;
+      border: 2px solid #444;
       transition: all 0.3s;
+      width: 300px;
+      text-align: center;
+    }
+
+    input[type="password"]::placeholder {
+      color: #aaa;
     }
 
     input[type="password"]:focus {
       border-color: #f00;
-      box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-    }
-
-    .message {
-      font-size: 28px;
-      margin-bottom: 10px;
-      text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+      box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+      background: rgba(30, 30, 30, 0.95);
     }
 
     /* Стили для анимированного изображения */
@@ -79,17 +103,17 @@
       width: 50vw;
       height: 50vh;
       z-index: 1000;
-      border: 5px solid white;
-      box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
-      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      border: 5px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 40px rgba(255, 0, 0, 0.9);
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.3s;
       overflow: hidden;
       opacity: 0;
       pointer-events: none;
+      border-radius: 10px;
     }
 
     #image-overlay.active {
       opacity: 1;
-      pointer-events: auto;
     }
 
     #image-overlay img {
@@ -100,17 +124,19 @@
 
     #timer-display {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 16px;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 5px;
+      bottom: 25px;
+      right: 25px;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 8px;
       z-index: 1001;
       display: none;
-      border: 1px solid #f00;
+      border: 2px solid #f00;
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
     }
 
     .flash-animation {
@@ -130,8 +156,10 @@
 <body>
   <!-- Оверлей ввода пароля -->
   <div class="overlay" id="overlay">
-    <div class="message">Введите ключ</div>
-    <input type="password" id="password" placeholder="Ключ..." autofocus>
+    <div class="message">ВВЕДИТЕ КЛЮЧ ДОСТУПА</div>
+    <div class="password-container">
+      <input type="password" id="password" placeholder="ВВОД КЛЮЧА..." autofocus>
+    </div>
   </div>
 
   <!-- Анимированное изображение -->
@@ -153,6 +181,7 @@
     // Конфигурация
     const ANIMATION_DURATION = 5000; // 5 секунд анимации
     const COOLDOWN_DURATION = 180000; // 3 минуты блокировки (в миллисекундах)
+    const CORRECT_PASSWORD = "12345"; // Пароль для доступа
     
     // Проверка блокировки
     function isCooldownActive() {
@@ -177,7 +206,7 @@
         const minutes = Math.floor(remaining / 60000);
         const seconds = Math.floor((remaining % 60000) / 1000);
         
-        timerDisplay.textContent = `Повторить через: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        timerDisplay.textContent = `ПОВТОР ЧЕРЕЗ: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         timerDisplay.style.display = 'block';
         
         setTimeout(showCooldownTime, 1000);
@@ -188,8 +217,8 @@
     
     // Основная функция анимации
     function triggerAnimation() {
-      // Не активируем, если оверлей ввода пароля виден
-      if (!overlay.classList.contains('hidden')) return;
+      // Не активируем, если пользователь не авторизован
+      if (!body.classList.contains('authenticated')) return;
       
       if (isCooldownActive()) {
         showCooldownTime();
@@ -217,24 +246,37 @@
     // Обработчик ввода пароля
     passwordInput.addEventListener('keyup', function(event) {
       if (event.key === 'Enter') {
-        if (passwordInput.value === '12345') {
+        if (passwordInput.value === CORRECT_PASSWORD) {
+          // Добавляем класс для плавного перехода фона
+          body.classList.add('authenticated');
+          
+          // Скрываем оверлей с анимацией
           overlay.classList.add('hidden');
           
           // Проверяем блокировку после ввода пароля
           if (isCooldownActive()) {
             showCooldownTime();
           }
+          
+          // Фокусируем на body для активации кликов
+          body.focus();
         } else {
+          // Анимация ошибки
           passwordInput.value = '';
-          passwordInput.placeholder = 'Неверный ключ!';
+          passwordInput.placeholder = 'НЕВЕРНЫЙ КЛЮЧ!';
           passwordInput.style.borderColor = '#f00';
-          passwordInput.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.5)';
+          passwordInput.style.boxShadow = '0 0 20px rgba(255, 0, 0, 0.8)';
+          passwordInput.style.background = 'rgba(50, 0, 0, 0.9)';
+          
+          // Вибрируем для обратной связи
+          if (navigator.vibrate) navigator.vibrate(200);
           
           setTimeout(() => {
-            passwordInput.style.borderColor = '#555';
+            passwordInput.style.borderColor = '#444';
             passwordInput.style.boxShadow = 'none';
-            passwordInput.placeholder = 'Ключ...';
-          }, 1000);
+            passwordInput.style.background = 'rgba(20, 20, 20, 0.9)';
+            passwordInput.placeholder = 'ВВОД КЛЮЧА...';
+          }, 1500);
         }
       }
     });
@@ -247,6 +289,9 @@
       if (isCooldownActive()) {
         showCooldownTime();
       }
+      
+      // Устанавливаем фокус на поле ввода
+      passwordInput.focus();
     });
   </script>
 </body>
