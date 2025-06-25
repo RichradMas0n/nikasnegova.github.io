@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Введите ключ</title>
+  <title>Защищенный доступ</title>
   <style>
     * {
       margin: 0;
@@ -17,11 +17,12 @@
     }
 
     body {
-      background-image: url('nika_xxx.png'); /* Твоя картинка PNG */
+      background-image: url('nika_xxx.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      background-color: black; /* если картинка не загрузится */
+      background-color: black;
+      overflow: hidden;
     }
 
     .overlay {
@@ -30,13 +31,13 @@
       left: 0;
       height: 100%;
       width: 100%;
-      background-color: black;
+      background-color: rgba(0, 0, 0, 0.9);
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      z-index: 1000;
+      z-index: 2000;
       transition: opacity 1s ease;
     }
 
@@ -52,36 +53,201 @@
       border-radius: 5px;
       margin-top: 15px;
       outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid #555;
+      transition: all 0.3s;
+    }
+
+    input[type="password"]:focus {
+      border-color: #f00;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
     }
 
     .message {
       font-size: 28px;
       margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+    }
+
+    /* Стили для анимированного изображения */
+    #image-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 50vw;
+      height: 50vh;
+      z-index: 1000;
+      border: 5px solid white;
+      box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #image-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #image-overlay img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #timer-display {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      color: white;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 5px;
+      z-index: 1001;
+      display: none;
+      border: 1px solid #f00;
+    }
+
+    .flash-animation {
+      animation: colorFlash 5s linear forwards;
+    }
+
+    @keyframes colorFlash {
+      0%, 16.66% { background-color: #000; }
+      16.67%, 33.33% { background-color: #fff; }
+      33.34%, 50% { background-color: #f00; }
+      50.01%, 66.66% { background-color: #000; }
+      66.67%, 83.33% { background-color: #fff; }
+      83.34%, 100% { background-color: #f00; }
     }
   </style>
 </head>
 <body>
+  <!-- Оверлей ввода пароля -->
+  <div class="overlay" id="overlay">
+    <div class="message">Введите ключ</div>
+    <input type="password" id="password" placeholder="Ключ..." autofocus>
+  </div>
 
-<div class="overlay" id="overlay">
-  <div class="message">Введите ключ</div>
-  <input type="password" id="password" placeholder="Ключ..." autofocus>
-</div>
+  <!-- Анимированное изображение -->
+  <div id="image-overlay">
+    <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b" alt="Secret Image">
+  </div>
+  
+  <!-- Таймер блокировки -->
+  <div id="timer-display"></div>
 
-<script>
-  const overlay = document.getElementById('overlay');
-  const passwordInput = document.getElementById('password');
-
-  passwordInput.addEventListener('keyup', function(event) {
-    if (event.key === 'Enter') {
-      if (passwordInput.value === '12345') {
-        overlay.classList.add('hidden');
+  <script>
+    // Элементы интерфейса
+    const overlay = document.getElementById('overlay');
+    const passwordInput = document.getElementById('password');
+    const imageOverlay = document.getElementById('image-overlay');
+    const timerDisplay = document.getElementById('timer-display');
+    const body = document.body;
+    
+    // Конфигурация
+    const ANIMATION_DURATION = 5000; // 5 секунд анимации
+    const COOLDOWN_DURATION = 180000; // 3 минуты блокировки (в миллисекундах)
+    
+    // Проверка блокировки
+    function isCooldownActive() {
+      const lastActivation = localStorage.getItem('lastActivation');
+      if (!lastActivation) return false;
+      
+      const currentTime = new Date().getTime();
+      const elapsed = currentTime - parseInt(lastActivation);
+      return elapsed < COOLDOWN_DURATION;
+    }
+    
+    // Показ оставшегося времени
+    function showCooldownTime() {
+      const lastActivation = localStorage.getItem('lastActivation');
+      if (!lastActivation) return;
+      
+      const currentTime = new Date().getTime();
+      const elapsed = currentTime - parseInt(lastActivation);
+      const remaining = COOLDOWN_DURATION - elapsed;
+      
+      if (remaining > 0) {
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        
+        timerDisplay.textContent = `Повторить через: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        timerDisplay.style.display = 'block';
+        
+        setTimeout(showCooldownTime, 1000);
       } else {
-        passwordInput.value = '';
-        passwordInput.placeholder = 'Неверный ключ!';
+        timerDisplay.style.display = 'none';
       }
     }
-  });
-</script>
-
+    
+    // Основная функция анимации
+    function triggerAnimation() {
+      // Не активируем, если оверлей ввода пароля виден
+      if (!overlay.classList.contains('hidden')) return;
+      
+      if (isCooldownActive()) {
+        showCooldownTime();
+        return;
+      }
+      
+      // Показываем изображение
+      imageOverlay.style.transform = 'translate(-50%, -50%) scale(1)';
+      imageOverlay.classList.add('active');
+      
+      // Запускаем анимацию фона
+      body.classList.add('flash-animation');
+      
+      // Запоминаем время активации
+      localStorage.setItem('lastActivation', new Date().getTime());
+      
+      // Скрываем через 5 секунд
+      setTimeout(() => {
+        imageOverlay.style.transform = 'translate(-50%, -50%) scale(0)';
+        imageOverlay.classList.remove('active');
+        body.classList.remove('flash-animation');
+      }, ANIMATION_DURATION);
+    }
+    
+    // Обработчик ввода пароля
+    passwordInput.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        if (passwordInput.value === '12345') {
+          overlay.classList.add('hidden');
+          
+          // Проверяем блокировку после ввода пароля
+          if (isCooldownActive()) {
+            showCooldownTime();
+          }
+        } else {
+          passwordInput.value = '';
+          passwordInput.placeholder = 'Неверный ключ!';
+          passwordInput.style.borderColor = '#f00';
+          passwordInput.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.5)';
+          
+          setTimeout(() => {
+            passwordInput.style.borderColor = '#555';
+            passwordInput.style.boxShadow = 'none';
+            passwordInput.placeholder = 'Ключ...';
+          }, 1000);
+        }
+      }
+    });
+    
+    // Обработчик клика по странице
+    document.addEventListener('click', triggerAnimation);
+    
+    // Проверка блокировки при загрузке
+    window.addEventListener('load', () => {
+      if (isCooldownActive()) {
+        showCooldownTime();
+      }
+    });
+  </script>
 </body>
 </html>
